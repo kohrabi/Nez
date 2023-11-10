@@ -23,7 +23,7 @@ namespace Nez.Particles
 		/// </summary>
 		public bool SimulateInWorldSpace
 		{
-			set => _emitterConfig.SimulateInWorldSpace = value;
+			set => EmitterConfig.SimulateInWorldSpace = value;
 		}
 
 		/// <summary>
@@ -63,7 +63,7 @@ namespace Nez.Particles
 
 		List<Particle> _particles;
 		bool _playOnAwake;
-		[Inspectable] ParticleEmitterConfig _emitterConfig;
+		[Inspectable] public ParticleEmitterConfig EmitterConfig;
 
 
 		public ParticleEmitter() : this(new ParticleEmitterConfig())
@@ -72,16 +72,16 @@ namespace Nez.Particles
 
 		public ParticleEmitter(ParticleEmitterConfig emitterConfig, bool playOnAwake = true)
 		{
-			_emitterConfig = emitterConfig;
+			EmitterConfig = emitterConfig;
 			_playOnAwake = playOnAwake;
-			_particles = new List<Particle>((int) _emitterConfig.MaxParticles);
-			Pool<Particle>.WarmCache((int) _emitterConfig.MaxParticles);
+			_particles = new List<Particle>((int) EmitterConfig.MaxParticles);
+			Pool<Particle>.WarmCache((int) EmitterConfig.MaxParticles);
 
 			// set some sensible defaults
 			CollisionConfig.Elasticity = 0.5f;
 			CollisionConfig.Friction = 0.5f;
 			CollisionConfig.CollidesWithLayers = Physics.AllLayers;
-			CollisionConfig.Gravity = _emitterConfig.Gravity;
+			CollisionConfig.Gravity = EmitterConfig.Gravity;
 			CollisionConfig.LifetimeLoss = 0f;
 			CollisionConfig.MinKillSpeedSquared = float.MinValue;
 			CollisionConfig.RadiusScale = 0.8f;
@@ -97,8 +97,8 @@ namespace Nez.Particles
 		{
 			// prep our custom BlendState and set the Material with it
 			var blendState = new BlendState();
-			blendState.ColorSourceBlend = blendState.AlphaSourceBlend = _emitterConfig.BlendFuncSource;
-			blendState.ColorDestinationBlend = blendState.AlphaDestinationBlend = _emitterConfig.BlendFuncDestination;
+			blendState.ColorSourceBlend = blendState.AlphaSourceBlend = EmitterConfig.BlendFuncSource;
+			blendState.ColorDestinationBlend = blendState.AlphaDestinationBlend = EmitterConfig.BlendFuncDestination;
 
 			Material = new Material(blendState);
 		}
@@ -122,16 +122,16 @@ namespace Nez.Particles
 			var rootPosition = Entity.Transform.Position + _localOffset;
 
 			// if the emitter is active and the emission rate is greater than zero then emit particles
-			if (_active && _emitterConfig.EmissionRate > 0)
+			if (_active && EmitterConfig.EmissionRate > 0)
 			{
 				if (_emitting)
 				{
-					var rate = 1.0f / _emitterConfig.EmissionRate;
+					var rate = 1.0f / EmitterConfig.EmissionRate;
 
-					if (_particles.Count < _emitterConfig.MaxParticles)
+					if (_particles.Count < EmitterConfig.MaxParticles)
 						_emitCounter += Time.DeltaTime;
 
-					while (_particles.Count < _emitterConfig.MaxParticles && _emitCounter > rate)
+					while (_particles.Count < EmitterConfig.MaxParticles && _emitCounter > rate)
 					{
 						AddParticle(rootPosition);
 						_emitCounter -= rate;
@@ -139,7 +139,7 @@ namespace Nez.Particles
 
 					_elapsedTime += Time.DeltaTime;
 
-					if (_emitterConfig.Duration != -1 && _emitterConfig.Duration < _elapsedTime)
+					if (EmitterConfig.Duration != -1 && EmitterConfig.Duration < _elapsedTime)
 					{
 						// when we hit our duration we dont emit any more particles
 						_emitting = false;
@@ -170,7 +170,7 @@ namespace Nez.Particles
 				var currentParticle = _particles[i];
 
 				// if update returns true that means the particle is done
-				if (currentParticle.Update(_emitterConfig, ref CollisionConfig, rootPosition))
+				if (currentParticle.Update(EmitterConfig, ref CollisionConfig, rootPosition))
 				{
 					Pool<Particle>.Free(currentParticle);
 					_particles.RemoveAt(i);
@@ -178,7 +178,7 @@ namespace Nez.Particles
 				else
 				{
 					// particle is good. collect min/max positions for the bounds
-					var pos = _emitterConfig.SimulateInWorldSpace ? currentParticle.spawnPosition : rootPosition;
+					var pos = EmitterConfig.SimulateInWorldSpace ? currentParticle.spawnPosition : rootPosition;
 					pos += currentParticle.position;
 					Vector2.Min(ref min, ref pos, out min);
 					Vector2.Max(ref max, ref pos, out max);
@@ -190,15 +190,15 @@ namespace Nez.Particles
 			_bounds.Width = max.X - min.X;
 			_bounds.Height = max.Y - min.Y;
 
-			if (_emitterConfig.Sprite == null)
+			if (EmitterConfig.Sprite == null)
 			{
 				_bounds.Inflate(1 * maxParticleSize, 1 * maxParticleSize);
 			}
 			else
 			{
-				maxParticleSize /= _emitterConfig.Sprite.SourceRect.Width;
-				_bounds.Inflate(_emitterConfig.Sprite.SourceRect.Width * maxParticleSize,
-					_emitterConfig.Sprite.SourceRect.Height * maxParticleSize);
+				maxParticleSize /= EmitterConfig.Sprite.SourceRect.Width;
+				_bounds.Inflate(EmitterConfig.Sprite.SourceRect.Width * maxParticleSize,
+					EmitterConfig.Sprite.SourceRect.Height * maxParticleSize);
 			}
 		}
 
@@ -215,16 +215,16 @@ namespace Nez.Particles
 			for (var i = 0; i < _particles.Count; i++)
 			{
 				var currentParticle = _particles[i];
-				var pos = _emitterConfig.SimulateInWorldSpace ? currentParticle.spawnPosition : rootPosition;
+				var pos = EmitterConfig.SimulateInWorldSpace ? currentParticle.spawnPosition : rootPosition;
 
-				if (_emitterConfig.Sprite == null)
+				if (EmitterConfig.Sprite == null)
 					batcher.Draw(Graphics.Instance.PixelTexture, pos + currentParticle.position, currentParticle.color,
 						currentParticle.rotation, Vector2.One, currentParticle.particleSize * 0.5f, SpriteEffects.None,
 						LayerDepth);
 				else
-					batcher.Draw(_emitterConfig.Sprite, pos + currentParticle.position,
-						currentParticle.color, currentParticle.rotation, _emitterConfig.Sprite.Center,
-						currentParticle.particleSize / _emitterConfig.Sprite.SourceRect.Width, SpriteEffects.None,
+					batcher.Draw(EmitterConfig.Sprite, pos + currentParticle.position,
+						currentParticle.color, currentParticle.rotation, EmitterConfig.Sprite.Center,
+						currentParticle.particleSize / EmitterConfig.Sprite.SourceRect.Width, SpriteEffects.None,
 						LayerDepth);
 			}
 		}
@@ -288,7 +288,7 @@ namespace Nez.Particles
 		/// </summary>
 		public void ResumeEmission()
 		{
-			if (IsStopped || (_emitterConfig.Duration != -1 && _emitterConfig.Duration < _elapsedTime))
+			if (IsStopped || (EmitterConfig.Duration != -1 && EmitterConfig.Duration < _elapsedTime))
 				return;
 
 			_emitting = true;
@@ -323,7 +323,7 @@ namespace Nez.Particles
 		{
 			// take the next particle out of the particle pool we have created and initialize it
 			var particle = Pool<Particle>.Obtain();
-			particle.Initialize(_emitterConfig, position);
+			particle.Initialize(EmitterConfig, position);
 			_particles.Add(particle);
 		}
 	}

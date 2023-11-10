@@ -48,7 +48,7 @@ namespace Nez.ImGuiTools
 						fp.AllowedExtensions.Clear();
 					else
 						fp.AllowedExtensions = new List<string>();
-					
+
 					fp.AllowedExtensions.AddRange(searchFilter.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries));
 				}
 
@@ -91,7 +91,7 @@ namespace Nez.ImGuiTools
 						ImGui.PushStyleColor(ImGuiCol.Text, Color.Yellow.PackedValue);
 						if (ImGui.Selectable("../", false, ImGuiSelectableFlags.DontClosePopups))
 							CurrentFolder = di.Parent.FullName;
-						
+
 						ImGui.PopStyleColor();
 					}
 
@@ -194,15 +194,15 @@ namespace Nez.ImGuiTools
 					}
 				}
 			}
-			
+
 			dirs.Sort();
 			files.Sort();
-			
+
 			var ret = new List<string>(dirs);
 			ret.AddRange(files);
 
 			return ret;
 		}
-	
+
 	}
 }

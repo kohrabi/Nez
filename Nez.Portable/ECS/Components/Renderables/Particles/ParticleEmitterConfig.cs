@@ -10,6 +10,7 @@ namespace Nez.Particles
 	public class ParticleEmitterConfig : IDisposable
 	{
 		public Sprite Sprite;
+		public string SpritePath;
 
 		/// <summary>
 		/// If true, particles will simulate in world space. ie when the parent Transform moves it will have no effect on any already active Particles.
@@ -43,6 +44,9 @@ namespace Nez.Particles
 		public float RotationEnd, RotationEndVariance;
 		public float EmissionRate;
 
+		public float StartDecelerateTime, StartDecelerateTimeVariance;
+		public float EndDecelerateTime, EndDecelerateTimeVariance;
+		public float MinDecelerateSpeed, MinDecelerateSpeedVariance;
 
 		// Particle ivars only used when a maxRadius value is provided. These values are used for
 		// the special purpose of creating the spinning portal emitter

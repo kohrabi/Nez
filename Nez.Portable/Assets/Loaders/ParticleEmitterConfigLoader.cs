@@ -45,6 +45,12 @@ namespace Nez.ParticleDesigner
 				RadialAccelVariance = GetFloatElement(root, "radialAccelVariance"),
 				TangentialAcceleration = GetFloatElement(root, "tangentialAcceleration"),
 				TangentialAccelVariance = GetFloatElement(root, "tangentialAccelVariance"),
+				StartDecelerateTime = GetFloatElement(root, "startDecelerateTime"),
+				StartDecelerateTimeVariance = GetFloatElement(root, "startDecelerateTimeVariance"),
+				EndDecelerateTime = GetFloatElement(root, "endDecelerateTime"),
+				EndDecelerateTimeVariance = GetFloatElement(root, "endDecelerateTimeVariance"),
+				MinDecelerateSpeed = GetFloatElement(root, "minDecelerateSpeed"),
+				MinDecelerateSpeedVariance = GetFloatElement(root, "minDecelerateSpeedVariance"),
 				StartColor = GetColorElement(root, "startColor"),
 				StartColorVariance = GetColorElement(root, "startColorVariance"),
 				FinishColor = GetColorElement(root, "finishColor"),
@@ -78,6 +84,8 @@ namespace Nez.ParticleDesigner
 			}
 
 			var textureElement = root.Element("texture");
+			if (textureElement == null)
+				return config;
 			var data = textureElement.Attribute("data");
 
 			// texture could be either a separate file or base64 encoded tiff
@@ -112,7 +120,7 @@ namespace Nez.ParticleDesigner
 			}
 			else
 			{
-				var path = Path.Combine(rootDir, (string)textureElement.Attribute("name"));
+				var path = (string)textureElement.Attribute("name");
 				using (var stream = TitleContainer.OpenStream(path))
 				{
 					var texture = Texture2D.FromStream(Core.GraphicsDevice, stream);
@@ -123,23 +131,43 @@ namespace Nez.ParticleDesigner
 			return config;
 		}
 
-		static float GetFloatElement(XElement root, string name) => (float)root.Element(name).Attribute("value");
+		static float GetFloatElement(XElement root, string name)
+		{
+			var ele = root.Element(name);
+			if (ele == null)
+				return 0f;
+			else
+				return (float)ele.Attribute("value");
+		}
 
 		/// <summary>
 		/// for some reason, some pex exporters export ints like maxParticles as floats. This mess guards against that.
 		/// </summary>
-		static int GetIntElement(XElement root, string name) => Mathf.RoundToInt(GetFloatElement(root, name));
+		static int GetIntElement(XElement root, string name)
+		{
+			var ele = root.Element(name);
+			if (ele == null)
+				return 0;
+			else
+				return Mathf.RoundToInt(GetFloatElement(root, name));
+		}
 
 		static Vector2 GetVectorElement(XElement root, string name)
 		{
 			var ele = root.Element(name);
-			return new Vector2((float)ele.Attribute("x"), (float)ele.Attribute("y"));
+			if (ele == null)
+				return Vector2.Zero;
+			else
+				return new Vector2((float)ele.Attribute("x"), (float)ele.Attribute("y"));
 		}
 
 		static Color GetColorElement(XElement root, string name)
 		{
 			var ele = root.Element(name);
-			return new Color((float)ele.Attribute("red"), (float)ele.Attribute("green"), (float)ele.Attribute("blue"), (float)ele.Attribute("alpha"));
+			if (ele == null)
+				return Color.White;
+			else 
+				return new Color((float)ele.Attribute("red"), (float)ele.Attribute("green"), (float)ele.Attribute("blue"), (float)ele.Attribute("alpha"));
 		}
 
 		static Blend GetBlendElement(XElement root, string name)

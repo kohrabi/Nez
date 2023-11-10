@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Nez.PhysicsShapes;
-
+using System;
 
 namespace Nez.Particles
 {
@@ -35,6 +35,11 @@ namespace Nez.Particles
 		float _degreesPerSecond;
 		internal float particleSize;
 		float _particleSizeDelta;
+
+		float _startDecelerateTime;
+		float _endDecelerateTime;
+		float _minDecelSpeed;
+		float _startLifeTime;
 
 		float _timeToLive;
 
@@ -95,6 +100,14 @@ namespace Nez.Particles
 			                      emitterConfig.RadialAccelVariance * Random.MinusOneToOne();
 			_tangentialAcceleration = emitterConfig.TangentialAcceleration +
 			                          emitterConfig.TangentialAccelVariance * Random.MinusOneToOne();
+
+			_startDecelerateTime = emitterConfig.StartDecelerateTime + 
+										emitterConfig.StartDecelerateTimeVariance * Random.MinusOneToOne();
+			_endDecelerateTime = emitterConfig.EndDecelerateTime +
+										emitterConfig.EndDecelerateTimeVariance * Random.MinusOneToOne();
+			_minDecelSpeed = emitterConfig.MinDecelerateSpeed +
+										emitterConfig.MinDecelerateSpeedVariance * Random.MinusOneToOne();
+			_startLifeTime = Time.TotalTime;
 
 			// calculate the particle size using the start and finish particle sizes
 			var particleStartSize = emitterConfig.StartParticleSize +
@@ -188,7 +201,21 @@ namespace Nez.Particles
 						tmp = _direction * Time.DeltaTime;
 
 						_velocity = tmp / Time.DeltaTime;
-						position = position + tmp;
+						if (Time.TotalTime >= _startLifeTime + _startDecelerateTime && Time.TotalTime <= _startLifeTime + _endDecelerateTime
+							&& _startDecelerateTime > 0)
+						{
+							// This feel very wrong
+							float time = 1 - Time.TotalTime / (_startLifeTime + _endDecelerateTime);
+							float speed = Tweens.Lerps.LerpDamp(_velocity.Length(), _minDecelSpeed, time);
+							_velocity = Vector2.Normalize(_velocity) * speed;
+							_tangentialAcceleration = Tweens.Lerps.LerpDamp(_tangentialAcceleration, _minDecelSpeed, time);
+							_radialAcceleration = Tweens.Lerps.LerpDamp(_radialAcceleration, _minDecelSpeed, time);
+							float dirSpeed = Tweens.Lerps.LerpDamp(_direction.Length(), _minDecelSpeed + 1, time);
+							_direction = Vector2.Normalize(_direction) * dirSpeed;
+						}
+
+						position = position + tmp; 
+
 					}
 				}
 
