@@ -107,7 +107,7 @@ namespace Nez.Particles
 										emitterConfig.EndDecelerateTimeVariance * Random.MinusOneToOne();
 			_minDecelSpeed = emitterConfig.MinDecelerateSpeed +
 										emitterConfig.MinDecelerateSpeedVariance * Random.MinusOneToOne();
-			_startLifeTime = Time.TotalTime;
+			_startLifeTime = Time.TimeSinceSceneLoad;
 
 			// calculate the particle size using the start and finish particle sizes
 			var particleStartSize = emitterConfig.StartParticleSize +
@@ -201,11 +201,12 @@ namespace Nez.Particles
 						tmp = _direction * Time.DeltaTime;
 
 						_velocity = tmp / Time.DeltaTime;
-						if (Time.TotalTime >= _startLifeTime + _startDecelerateTime && Time.TotalTime <= _startLifeTime + _endDecelerateTime
+						if (Time.TimeSinceSceneLoad >= _startLifeTime + _startDecelerateTime && 
+							Time.TimeSinceSceneLoad <= _startLifeTime + _endDecelerateTime
 							&& _startDecelerateTime > 0)
 						{
 							// This feel very wrong
-							float time = 1 - Time.TotalTime / (_startLifeTime + _endDecelerateTime);
+							float time = 1 - Time.TimeSinceSceneLoad / (_startLifeTime + _endDecelerateTime);
 							float speed = Tweens.Lerps.LerpDamp(_velocity.Length(), _minDecelSpeed, time);
 							_velocity = Vector2.Normalize(_velocity) * speed;
 							_tangentialAcceleration = Tweens.Lerps.LerpDamp(_tangentialAcceleration, _minDecelSpeed, time);

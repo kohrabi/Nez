@@ -73,10 +73,12 @@ namespace Nez.ParticleDesigner
 				RotationStart = GetFloatElement(root, "rotationStart"),
 				RotationStartVariance = GetFloatElement(root, "rotationStartVariance"),
 				RotationEnd = GetFloatElement(root, "rotationEnd"),
-				RotationEndVariance = GetFloatElement(root, "rotationEndVariance")
+				RotationEndVariance = GetFloatElement(root, "rotationEndVariance"),
+				EmissionRate = GetFloatElement(root, "emissionRate")
 			};
 
-			config.EmissionRate = config.MaxParticles / config.ParticleLifespan;
+			if (config.EmissionRate == 0)
+				config.EmissionRate = config.MaxParticles / config.ParticleLifespan;
 			if (float.IsInfinity(config.EmissionRate))
 			{
 				Debug.Error("---- particle system EmissionRate (MaxParticles / ParticleLifespace) is infinity. Resetting to 10000");
